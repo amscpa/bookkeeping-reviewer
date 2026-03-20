@@ -491,7 +491,8 @@ def generate_pdf(data, checks, ai_results):
         "management_summary": "Management Summary (Internal)",
         "client_summary":     "Client Executive Summary",
         "engagement_notes":   "Engagement File Notes",
-        "unusual_items":      "Unusual Items -- CRA Risk Flags",
+        "unusual_items":         "Unusual Items -- CRA Risk Flags",
+        "bank_statement_review": "Bank Statement Audit Review",
     }
     SEC_FILLS = [INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE,
                  INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE]
@@ -831,7 +832,8 @@ def generate_word(data, checks, ai_results):
         "management_summary": "Management Summary (Internal)",
         "client_summary":     "Client Executive Summary",
         "engagement_notes":   "Engagement File Notes",
-        "unusual_items":      "Unusual Items -- CRA Risk Flags",
+        "unusual_items":         "Unusual Items -- CRA Risk Flags",
+        "bank_statement_review": "Bank Statement Audit Review",
     }
     SEC_FILLS = [INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE,
                  INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE]
