@@ -86,17 +86,13 @@ with st.sidebar:
     )
 
     st.divider()
-    import os
-    api_key = st.secrets.get("OPENAI_API_KEY", "") if hasattr(st, "secrets") else ""
-    if not api_key:
-        api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key:
-        api_key = st.text_input(
-            "OpenAI API key (not found in secrets)",
-            type="password",
-            placeholder="sk-...",
-            help="Add OPENAI_API_KEY to Streamlit secrets for auto-loading"
-        )
+    api_key = st.text_input(
+        "OpenAI API key",
+        type="password",
+        placeholder="sk-...",
+        help="Your ChatGPT API key. Get one at platform.openai.com"
+    )
+
     if api_key:
         st.success("API key set ✓")
 
@@ -249,79 +245,105 @@ with tab1:
 # ── Tab 2: AI Review ───────────────────────────────────────────────────────────
 with tab2:
     if not api_key:
-        st.warning("Enter your OpenAI API key in the sidebar to use AI review features.")
-        st.info("Don't have one? Get it at platform.openai.com → API keys. Cost: ~$0.02–0.05 per review.")
-        st.stop()
+        st.warning("⚠️ Enter your OpenAI API key in the sidebar to use AI review features.")
+        st.info("💡 Don't have one? Get it at platform.openai.com → API Keys. Cost: ~$0.02–0.05 per review.")
+        st.markdown("---")
+        st.markdown("**Once your API key is entered, 8 CPA review prompts will appear here:**")
+        for label in ["🔍 Full File Review", "💡 Tax Planning", "🔎 Missing Expenses", "📋 Staff Queries",
+                      "📊 Management Report", "✉️ Client Summary", "📁 Engagement Notes", "🚩 Flag Unusual Items"]:
+            st.markdown(f"&nbsp;&nbsp;&nbsp;▸ {label}", unsafe_allow_html=True)
+    else:
+        from ai_review import run_prompt, get_prompt_labels
 
-    from ai_review import run_prompt, get_prompt_labels
+        st.markdown("#### 8 Pre-built CPA Review Prompts")
+        st.markdown("*Click any button to run that analysis. Results appear below and are included in your download.*")
 
-    st.markdown("#### 8 Pre-built CPA Review Prompts")
-    st.markdown("*Click any button to run that analysis. Results appear below and are included in your download.*")
+        # Prompt buttons — 4 per row
+        prompt_labels = get_prompt_labels()
+        if "ai_results" not in st.session_state:
+            st.session_state.ai_results = {}
+        if "active_prompt" not in st.session_state:
+            st.session_state.active_prompt = None
 
-    # Prompt buttons — 4 per row
-    prompt_labels = get_prompt_labels()
-    if "ai_results" not in st.session_state:
-        st.session_state.ai_results = {}
-    if "active_prompt" not in st.session_state:
-        st.session_state.active_prompt = None
+        row1 = st.columns(4)
+        row2 = st.columns(4)
+        all_cols = row1 + row2
 
-    row1 = st.columns(4)
-    row2 = st.columns(4)
-    all_cols = row1 + row2
+        for i, (key, label) in enumerate(prompt_labels):
+            with all_cols[i]:
+                already_run = key in st.session_state.ai_results
+                btn_label = f"✓ {label}" if already_run else label
+                if st.button(btn_label, key=f"btn_{key}", use_container_width=True):
+                    st.session_state.active_prompt = key
+                    with st.spinner(f"Running: {label}..."):
+                        try:
+                            result = run_prompt(key, data, checks, api_key)
+                            st.session_state.ai_results[key] = result
+                        except Exception as e:
+                            st.error(f"API error: {e}")
 
-    for i, (key, label) in enumerate(prompt_labels):
-        with all_cols[i]:
-            already_run = key in st.session_state.ai_results
-            btn_label = f"✓ {label}" if already_run else label
-            if st.button(btn_label, key=f"btn_{key}", use_container_width=True):
-                st.session_state.active_prompt = key
-                with st.spinner(f"Running: {label}..."):
+        st.divider()
+
+        # Run all button
+        col_run, col_clear = st.columns([2, 1])
+        with col_run:
+            if st.button("▶ Run ALL 8 prompts", type="primary", use_container_width=True):
+                progress = st.progress(0)
+                status   = st.empty()
+                for i, (key, label) in enumerate(prompt_labels):
+                    status.info(f"Running {i+1}/8: {label}...")
                     try:
                         result = run_prompt(key, data, checks, api_key)
                         st.session_state.ai_results[key] = result
                     except Exception as e:
-                        st.error(f"API error: {e}")
+                        st.session_state.ai_results[key] = f"Error: {e}"
+                    progress.progress((i + 1) / len(prompt_labels))
+                status.success("All 8 prompts complete! Go to Download tab.")
+        with col_clear:
+            if st.button("Clear results", use_container_width=True):
+                st.session_state.ai_results = {}
+                st.session_state.active_prompt = None
+                st.rerun()
 
-    st.divider()
+        # Display active result
+        active = st.session_state.active_prompt
+        if active and active in st.session_state.ai_results:
+            label = dict(prompt_labels).get(active, active)
+            st.markdown(f"#### {label}")
+            with st.container():
+                st.markdown(
+                    f'<div class="ai-result">' +
+                    st.session_state.ai_results[active].replace("\n", "<br>") +
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+            col_copy, _ = st.columns([1, 3])
+            with col_copy:
+                st.download_button(
+                    "⬇ Save this analysis as .txt",
+                    data=st.session_state.ai_results[active],
+                    file_name=f"{active}_analysis.txt",
+                    mime="text/plain",
+                    use_container_width=True,
+                    key=f"dl_{active}"
+                )
+        elif st.session_state.ai_results:
+            # Show most recently run
+            last_key = list(st.session_state.ai_results.keys())[-1]
+            label = dict(prompt_labels).get(last_key, last_key)
+            st.markdown(f"#### {label}")
+            with st.container():
+                st.markdown(
+                    f'<div class="ai-result">' +
+                    st.session_state.ai_results[last_key].replace("\n", "<br>") +
+                    '</div>',
+                    unsafe_allow_html=True
+                )
 
-    # Run all button
-    col_run, col_clear = st.columns([2, 1])
-    with col_run:
-        if st.button("▶ Run ALL 8 prompts", type="primary", use_container_width=True):
-            progress = st.progress(0)
-            status   = st.empty()
-            for i, (key, label) in enumerate(prompt_labels):
-                status.info(f"Running {i+1}/8: {label}...")
-                try:
-                    result = run_prompt(key, data, checks, api_key)
-                    st.session_state.ai_results[key] = result
-                except Exception as e:
-                    st.session_state.ai_results[key] = f"Error: {e}"
-                progress.progress((i + 1) / len(prompt_labels))
-            status.success("All 8 prompts complete! Go to Download tab.")
-    with col_clear:
-        if st.button("Clear results", use_container_width=True):
-            st.session_state.ai_results = {}
-            st.session_state.active_prompt = None
-            st.rerun()
-
-    # Display active result
-    active = st.session_state.active_prompt
-    if active and active in st.session_state.ai_results:
-        label = dict(prompt_labels).get(active, active)
-        st.markdown(f"#### {label}")
-        st.markdown(f'<div class="ai-result">{st.session_state.ai_results[active]}</div>', unsafe_allow_html=True)
-    elif st.session_state.ai_results:
-        # Show most recently run
-        last_key = list(st.session_state.ai_results.keys())[-1]
-        label = dict(prompt_labels).get(last_key, last_key)
-        st.markdown(f"#### {label}")
-        st.markdown(f'<div class="ai-result">{st.session_state.ai_results[last_key]}</div>', unsafe_allow_html=True)
-
-    # Financial data expander
-    with st.expander("🔍 View extracted financial data sent to AI"):
-        from ai_review import build_context
-        st.code(build_context(data, checks), language="text")
+        # Financial data expander
+        with st.expander("🔍 View extracted financial data sent to AI"):
+            from ai_review import build_context
+            st.code(build_context(data, checks), language="text")
 
 
 # ── Tab 3: Download ────────────────────────────────────────────────────────────
