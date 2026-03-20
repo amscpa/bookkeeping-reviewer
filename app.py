@@ -15,59 +15,68 @@ st.set_page_config(
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-.main { background: #0f0e1a; }
-.stApp { background: #0f0e1a; }
+/* ── Light professional theme ── */
+.stApp { background: #f5f7fa !important; }
+[data-testid="stSidebar"] { background: #ffffff !important; border-right: 1px solid #e2e8f0; }
 
 /* Check cards */
 .check-card {
-    border-radius: 10px; padding: 10px 14px; margin: 6px 0;
-    border-left: 4px solid; font-size: 13px;
+    border-radius: 8px; padding: 10px 14px; margin: 5px 0;
+    border-left: 4px solid; font-size: 13px; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07);
 }
-.check-critical { background: rgba(239,68,68,.1); border-color: #ef4444; }
-.check-warning  { background: rgba(245,158,11,.1); border-color: #f59e0b; }
-.check-info     { background: rgba(99,102,241,.1); border-color: #6366f1; }
-.check-pass     { background: rgba(16,185,129,.08); border-color: #10b981; }
+.check-critical { background: #fff5f5; border-color: #e53e3e; }
+.check-warning  { background: #fffbeb; border-color: #d97706; }
+.check-info     { background: #eff6ff; border-color: #4f46e5; }
+.check-pass     { background: #f0fdf4; border-color: #16a34a; }
 
 .check-badge {
-    display: inline-block; padding: 1px 8px; border-radius: 4px;
-    font-size: 10px; font-weight: 700; margin-right: 8px;
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; margin-right: 8px; letter-spacing:.04em;
 }
-.badge-critical { background: #ef4444; color: white; }
-.badge-warning  { background: #f59e0b; color: white; }
-.badge-info     { background: #6366f1; color: white; }
-.badge-pass     { background: #10b981; color: white; }
+.badge-critical { background: #e53e3e; color: white; }
+.badge-warning  { background: #d97706; color: white; }
+.badge-info     { background: #4f46e5; color: white; }
+.badge-pass     { background: #16a34a; color: white; }
 
 /* Stat boxes */
 .stat-box {
-    background: #16152a; border: 1px solid rgba(255,255,255,.1);
+    background: #ffffff; border: 1px solid #e2e8f0;
     border-radius: 12px; padding: 16px; text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 .stat-num { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
-.stat-lbl { font-size: 12px; color: rgba(226,232,240,.5); }
+.stat-lbl { font-size: 12px; color: #64748b; font-weight: 500; }
 
 /* Client header */
 .client-header {
-    background: linear-gradient(135deg, rgba(99,102,241,.2), rgba(139,92,246,.15));
-    border: 1px solid rgba(99,102,241,.3); border-radius: 16px;
-    padding: 1.2rem 1.5rem; margin-bottom: 1.2rem;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 14px; padding: 1.2rem 1.6rem; margin-bottom: 1.2rem;
+    box-shadow: 0 4px 14px rgba(79,70,229,.25);
 }
 .client-name { font-size: 20px; font-weight: 800; color: #fff; }
-.client-sub  { font-size: 13px; color: rgba(226,232,240,.6); margin-top: 4px; }
+.client-sub  { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 4px; }
 
 /* AI result */
 .ai-result {
-    background: #16152a; border: 1px solid rgba(99,102,241,.25);
-    border-radius: 12px; padding: 1.25rem; margin-top: 1rem;
-    white-space: pre-wrap; font-size: 13px; line-height: 1.7;
-    color: #e2e8f0; max-height: 600px; overflow-y: auto;
+    background: #ffffff; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 1.25rem; margin-top: 1rem;
+    white-space: pre-wrap; font-size: 13px; line-height: 1.8;
+    color: #1e293b; max-height: 600px; overflow-y: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
 /* Category header */
 .cat-header {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .07em; color: rgba(165,180,252,.8);
-    margin: 12px 0 4px 0; padding: 4px 0;
-    border-bottom: 1px solid rgba(99,102,241,.2);
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: #4f46e5;
+    margin: 14px 0 5px 0; padding: 4px 0;
+    border-bottom: 2px solid #e0e7ff;
+}
+
+/* Streamlit button tweaks */
+.stButton > button {
+    border-radius: 8px !important; font-weight: 600 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -86,22 +95,34 @@ with st.sidebar:
     )
 
     st.divider()
-    api_key = st.text_input(
-        "OpenAI API key",
-        type="password",
-        placeholder="sk-...",
-        help="Your ChatGPT API key. Get one at platform.openai.com"
-    )
+    import os
+    # Auto-load from Streamlit Cloud Secrets (Settings → Secrets → OPENAI_API_KEY)
+    api_key = ""
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        pass
+    if not api_key:
+        api_key = os.environ.get("OPENAI_API_KEY", "")
 
     if api_key:
-        st.success("API key set ✓")
+        st.success("✅ API key loaded automatically")
+    else:
+        api_key = st.text_input(
+            "OpenAI API key",
+            type="password",
+            placeholder="sk-proj-...",
+            help="Or add OPENAI_API_KEY to Streamlit Cloud → Settings → Secrets for auto-load"
+        )
+        if api_key:
+            st.success("API key set ✓")
 
     st.divider()
     st.markdown("**How to use:**")
     st.markdown("""
 1. Upload the completed Excel file
 2. View automatic checks instantly
-3. Enter your OpenAI API key
+3. AI key loads automatically (or enter manually)
 4. Click any AI review button
 5. Download PDF or Word report
 """)
@@ -112,27 +133,27 @@ with st.sidebar:
 # ── Main area ──────────────────────────────────────────────────────────────────
 if not uploaded_file:
     st.markdown("""
-    <div style="text-align:center;padding:4rem 2rem">
+    <div style="text-align:center;padding:4rem 2rem;background:#f5f7fa">
         <div style="font-size:60px;margin-bottom:1rem">📋</div>
-        <div style="font-size:24px;font-weight:700;color:#fff;margin-bottom:8px">Bookkeeping File Reviewer</div>
-        <div style="font-size:15px;color:rgba(226,232,240,.5);margin-bottom:2rem">
+        <div style="font-size:24px;font-weight:700;color:#1e293b;margin-bottom:8px">Bookkeeping File Reviewer</div>
+        <div style="font-size:15px;color:#64748b;margin-bottom:2rem">
             Upload a completed bookkeeping Excel file to begin your CPA review
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:700px;margin:0 auto">
-            <div style="background:#16152a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
                 <div style="font-size:24px;margin-bottom:8px">⚡</div>
-                <div style="font-weight:600;color:#fff;margin-bottom:4px">25 Auto Checks</div>
-                <div style="font-size:12px;color:rgba(226,232,240,.4)">Math, balancing & consistency checks in seconds</div>
+                <div style="font-weight:600;color:#1e293b;margin-bottom:4px">25 Auto Checks</div>
+                <div style="font-size:12px;color:#64748b">Math, balancing & consistency checks in seconds</div>
             </div>
-            <div style="background:#16152a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
                 <div style="font-size:24px;margin-bottom:8px">🤖</div>
-                <div style="font-weight:600;color:#fff;margin-bottom:4px">8 AI Prompts</div>
-                <div style="font-size:12px;color:rgba(226,232,240,.4)">Tax planning, missing expenses, staff queries & more</div>
+                <div style="font-weight:600;color:#1e293b;margin-bottom:4px">8 AI Prompts</div>
+                <div style="font-size:12px;color:#64748b">Tax planning, missing expenses, staff queries & more</div>
             </div>
-            <div style="background:#16152a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
                 <div style="font-size:24px;margin-bottom:8px">📄</div>
-                <div style="font-weight:600;color:#fff;margin-bottom:4px">PDF & Word</div>
-                <div style="font-size:12px;color:rgba(226,232,240,.4)">Professional formatted reports ready for your file</div>
+                <div style="font-weight:600;color:#1e293b;margin-bottom:4px">PDF & Word</div>
+                <div style="font-size:12px;color:#64748b">Professional formatted reports ready for your file</div>
             </div>
         </div>
     </div>
