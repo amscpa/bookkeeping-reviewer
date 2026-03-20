@@ -1,3 +1,26 @@
+def pdf_safe(text):
+    """Replace unicode chars that crash fpdf2 helvetica font."""
+    if not text:
+        return ""
+    replacements = {
+        "\u2014": "--",   # em dash
+        "\u2013": "-",    # en dash
+        "\u2018": "'",    # left single quote
+        "\u2019": "'",    # right single quote
+        "\u201c": '"',    # left double quote
+        "\u201d": '"',    # right double quote
+        "\u2022": "-",    # bullet
+        "\u2026": "...",  # ellipsis
+        "\u25b8": ">",    # triangle
+        "\u2713": "OK",   # checkmark
+        "\u00a0": " ",    # non-breaking space
+        "\u2192": "->",   # arrow
+    }
+    for char, rep in replacements.items():
+        text = text.replace(char, rep)
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
+
 """
 report_gen.py — Generate formatted PDF and Word reports.
 """
@@ -35,7 +58,7 @@ class ReviewPDF(FPDF):
         self.set_font("Helvetica", "B", 9)
         self.set_fill_color(30, 27, 75)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 8, f"  BOOKKEEPING REVIEW — {self.client_name}  |  Year ended {self.year_end}", fill=True, ln=True)
+        self.cell(0, 8, pdf_safe(f"  BOOKKEEPING REVIEW -- {self.client_name}  |  Year ended {self.year_end}"), fill=True, ln=True)
         self.set_text_color(0, 0, 0)
         self.ln(2)
 
@@ -69,14 +92,14 @@ class ReviewPDF(FPDF):
         self.set_font("Helvetica", "B", 9)
         self.set_fill_color(250, 250, 252)
         remaining = self.w - self.l_margin - self.r_margin - 18
-        self.cell(remaining, 5, f"  {title[:95]}", fill=True, ln=True)
+        self.cell(remaining, 5, pdf_safe(f"  {title[:95]}"), fill=True, ln=True)
 
         # Detail
         if detail and level != "pass":
             self.set_font("Helvetica", "", 8)
             self.set_text_color(80, 80, 80)
             self.set_x(self.l_margin + 20)
-            self.multi_cell(remaining - 2, 4, detail[:300])
+            self.multi_cell(remaining - 2, 4, pdf_safe(detail[:300]))
             self.set_text_color(0, 0, 0)
         self.ln(1)
 
@@ -91,14 +114,14 @@ class ReviewPDF(FPDF):
                 self.ln(2); continue
             if line.startswith("##") or (line.isupper() and len(line) > 3):
                 self.set_font("Helvetica", "B", 9)
-                self.cell(0, 5, line.replace("#", "").strip(), ln=True)
+                self.cell(0, 5, pdf_safe(line.replace("#", "").strip()), ln=True)
                 self.set_font("Helvetica", "", 9)
             elif line.startswith("**") and line.endswith("**"):
                 self.set_font("Helvetica", "B", 9)
-                self.cell(0, 5, line.replace("**", ""), ln=True)
+                self.cell(0, 5, pdf_safe(line.replace("**", "")), ln=True)
                 self.set_font("Helvetica", "", 9)
             else:
-                self.multi_cell(0, 4.5, line[:200])
+                self.multi_cell(0, 4.5, pdf_safe(line[:200]))
         self.ln(3)
 
 
