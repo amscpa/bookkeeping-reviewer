@@ -15,29 +15,51 @@ st.set_page_config(
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* ── Light professional theme ── */
+/* ── Light theme with dark readable text ── */
 .stApp { background: #f5f7fa !important; }
-[data-testid="stSidebar"] { background: #ffffff !important; border-right: 1px solid #e2e8f0; }
+[data-testid="stSidebar"] {
+    background: #ffffff !important;
+    border-right: 1px solid #e2e8f0;
+}
+[data-testid="stSidebar"] * { color: #1e293b !important; }
 
-/* Check cards */
+/* Welcome banner */
+.welcome-banner {
+    background: linear-gradient(135deg, #3b37cc 0%, #7c3aed 100%);
+    border-radius: 14px; padding: 1.1rem 1.8rem;
+    margin-bottom: 1.2rem; display: flex; align-items: center;
+    box-shadow: 0 4px 18px rgba(59,55,204,.22);
+}
+.welcome-text {
+    font-size: 22px; font-weight: 800; color: #ffffff;
+    letter-spacing: .01em;
+}
+.welcome-sub {
+    font-size: 12px; color: rgba(255,255,255,.72);
+    margin-top: 2px; font-weight: 400;
+}
+
+/* Check cards — strong dark text */
 .check-card {
     border-radius: 8px; padding: 10px 14px; margin: 5px 0;
-    border-left: 4px solid; font-size: 13px; background: #fff;
+    border-left: 4px solid; font-size: 13px;
     box-shadow: 0 1px 3px rgba(0,0,0,.07);
 }
-.check-critical { background: #fff5f5; border-color: #e53e3e; }
-.check-warning  { background: #fffbeb; border-color: #d97706; }
-.check-info     { background: #eff6ff; border-color: #4f46e5; }
-.check-pass     { background: #f0fdf4; border-color: #16a34a; }
+.check-critical { background: #fff0f0; border-color: #dc2626; color: #1e293b; }
+.check-warning  { background: #fffbeb; border-color: #d97706; color: #1e293b; }
+.check-info     { background: #eff6ff; border-color: #4f46e5; color: #1e293b; }
+.check-pass     { background: #f0fdf4; border-color: #16a34a; color: #1e293b; }
+.check-card strong { color: #0f172a !important; font-size: 13px; }
 
 .check-badge {
-    display: inline-block; padding: 2px 8px; border-radius: 4px;
-    font-size: 10px; font-weight: 700; margin-right: 8px; letter-spacing:.04em;
+    display: inline-block; padding: 2px 9px; border-radius: 4px;
+    font-size: 10px; font-weight: 800; margin-right: 8px;
+    letter-spacing: .05em;
 }
-.badge-critical { background: #e53e3e; color: white; }
-.badge-warning  { background: #d97706; color: white; }
-.badge-info     { background: #4f46e5; color: white; }
-.badge-pass     { background: #16a34a; color: white; }
+.badge-critical { background: #dc2626; color: #ffffff; }
+.badge-warning  { background: #d97706; color: #ffffff; }
+.badge-info     { background: #4f46e5; color: #ffffff; }
+.badge-pass     { background: #16a34a; color: #ffffff; }
 
 /* Stat boxes */
 .stat-box {
@@ -46,23 +68,23 @@ st.markdown("""
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 .stat-num { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
-.stat-lbl { font-size: 12px; color: #64748b; font-weight: 500; }
+.stat-lbl { font-size: 12px; color: #475569; font-weight: 600; }
 
 /* Client header */
 .client-header {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    border-radius: 14px; padding: 1.2rem 1.6rem; margin-bottom: 1.2rem;
-    box-shadow: 0 4px 14px rgba(79,70,229,.25);
+    background: linear-gradient(135deg, #3b37cc, #7c3aed);
+    border-radius: 14px; padding: 1.1rem 1.5rem; margin-bottom: 1.2rem;
+    box-shadow: 0 4px 14px rgba(59,55,204,.25);
 }
-.client-name { font-size: 20px; font-weight: 800; color: #fff; }
-.client-sub  { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 4px; }
+.client-name { font-size: 20px; font-weight: 800; color: #ffffff; }
+.client-sub  { font-size: 13px; color: rgba(255,255,255,.78); margin-top: 4px; }
 
-/* AI result */
+/* AI result — dark text on white */
 .ai-result {
     background: #ffffff; border: 1px solid #e2e8f0;
     border-radius: 10px; padding: 1.25rem; margin-top: 1rem;
     white-space: pre-wrap; font-size: 13px; line-height: 1.8;
-    color: #1e293b; max-height: 600px; overflow-y: auto;
+    color: #0f172a; max-height: 600px; overflow-y: auto;
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
@@ -70,14 +92,25 @@ st.markdown("""
 .cat-header {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
     letter-spacing: .08em; color: #4f46e5;
-    margin: 14px 0 5px 0; padding: 4px 0;
-    border-bottom: 2px solid #e0e7ff;
+    margin: 14px 0 5px 0; padding: 5px 8px;
+    background: #e0e7ff; border-radius: 4px;
 }
 
-/* Streamlit button tweaks */
-.stButton > button {
-    border-radius: 8px !important; font-weight: 600 !important;
+/* Detail text under checks — dark readable */
+.check-detail {
+    font-size: 12px; color: #374151; margin-top: 4px;
+    padding-left: 4px;
 }
+
+/* Buttons */
+.stButton > button {
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+}
+
+/* Tab text */
+[data-baseweb="tab"] { color: #1e293b !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -96,7 +129,6 @@ with st.sidebar:
 
     st.divider()
     import os
-    # Auto-load from Streamlit Cloud Secrets (Settings → Secrets → OPENAI_API_KEY)
     api_key = ""
     try:
         api_key = st.secrets["OPENAI_API_KEY"]
@@ -104,7 +136,6 @@ with st.sidebar:
         pass
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY", "")
-
     if api_key:
         st.success("✅ API key loaded automatically")
     else:
@@ -112,7 +143,7 @@ with st.sidebar:
             "OpenAI API key",
             type="password",
             placeholder="sk-proj-...",
-            help="Or add OPENAI_API_KEY to Streamlit Cloud → Settings → Secrets for auto-load"
+            help="Or store as OPENAI_API_KEY in Streamlit Secrets for auto-load"
         )
         if api_key:
             st.success("API key set ✓")
@@ -122,13 +153,17 @@ with st.sidebar:
     st.markdown("""
 1. Upload the completed Excel file
 2. View automatic checks instantly
-3. AI key loads automatically (or enter manually)
+3. Enter your OpenAI API key
 4. Click any AI review button
 5. Download PDF or Word report
 """)
     st.divider()
     st.markdown("*All files processed in memory — not stored.*", unsafe_allow_html=True)
 
+
+# ── Firm name (edit this to your firm name) ────────────────────────────────────
+FIRM_NAME    = "JAINIM CONSULTING INC"
+FIRM_TAGLINE = "Bookkeeping & Tax Review Portal  ·  Powered by AI"
 
 # ── Main area ──────────────────────────────────────────────────────────────────
 if not uploaded_file:
@@ -184,6 +219,16 @@ checks = load_checks(file_bytes, uploaded_file.name)
 
 from auto_checks import summarize_checks
 counts = summarize_checks(checks)
+
+# ── Welcome banner ─────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div class="welcome-banner">
+    <div>
+        <div class="welcome-text">🏢 &nbsp;Welcome to {FIRM_NAME}</div>
+        <div class="welcome-sub">{FIRM_TAGLINE}</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ── Client header ──────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -253,7 +298,7 @@ with tab1:
 
         st.markdown(f'<div class="cat-header">▸ {cat}</div>', unsafe_allow_html=True)
         for c in sorted(visible, key=lambda x: level_order.get(x["level"], 9)):
-            detail_html = f'<div style="font-size:12px;color:rgba(226,232,240,.55);margin-top:4px">{c.get("detail","")}</div>' if c.get("detail") and c["level"] != "pass" else ""
+            detail_html = f'<div class="check-detail">{c.get("detail","")}</div>' if c.get("detail") and c["level"] != "pass" else ""
             st.markdown(f"""
             <div class="check-card {card_map.get(c['level'], '')}">
                 <span class="check-badge {badge_map.get(c['level'], '')}">{label_map.get(c['level'], c['level'].upper())}</span>
@@ -276,8 +321,8 @@ with tab2:
     else:
         from ai_review import run_prompt, get_prompt_labels
 
-        st.markdown("#### 8 Pre-built CPA Review Prompts")
-        st.markdown("*Click any button to run that analysis. Results appear below and are included in your download.*")
+        st.markdown("#### 9 Pre-built CPA Review Prompts")
+        st.markdown("*Click any button to run that analysis. Results appear below and are included in your report.*")
 
         # Prompt buttons — 4 per row
         prompt_labels = get_prompt_labels()
@@ -286,9 +331,13 @@ with tab2:
         if "active_prompt" not in st.session_state:
             st.session_state.active_prompt = None
 
-        row1 = st.columns(4)
-        row2 = st.columns(4)
-        all_cols = row1 + row2
+        # Dynamic grid: 3 columns, as many rows as needed
+        n_cols = 3
+        n_prompts = len(prompt_labels)
+        n_rows = (n_prompts + n_cols - 1) // n_cols
+        all_cols = []
+        for _r in range(n_rows):
+            all_cols += st.columns(n_cols)
 
         for i, (key, label) in enumerate(prompt_labels):
             with all_cols[i]:
@@ -308,11 +357,11 @@ with tab2:
         # Run all button
         col_run, col_clear = st.columns([2, 1])
         with col_run:
-            if st.button("▶ Run ALL 8 prompts", type="primary", use_container_width=True):
+            if st.button("▶ Run ALL 9 prompts", type="primary", use_container_width=True):
                 progress = st.progress(0)
                 status   = st.empty()
                 for i, (key, label) in enumerate(prompt_labels):
-                    status.info(f"Running {i+1}/8: {label}...")
+                    status.info(f"Running {i+1}/9: {label}...")
                     try:
                         result = run_prompt(key, data, checks, api_key)
                         st.session_state.ai_results[key] = result
