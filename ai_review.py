@@ -271,6 +271,77 @@ Be thorough — this is a professional liability review.
 Financial data:
 {context}"""
         },
+
+        "bank_statement_review": {
+            "label": "🏦 Bank Statement Review",
+            "user": f"""You are a senior bookkeeping auditor, tax reviewer, and financial statement reviewer.
+
+Your task is to audit the bookkeeping data extracted from this workbook and determine whether it is accurate, complete, and logically consistent. Focus especially on the Bank Statement data.
+
+Workbook structure and rules:
+- Rows represent transactions; columns represent accounts.
+- Opening balances are at the start of the period; closing balances at the end.
+- Row 603 (if present) indicates whether each account is an Income Statement or Balance Sheet account.
+- Positive values represent debits; negative values represent credits.
+- Range F605:L623 (if present) contains GST calculation, tax provision entries, and final tax liability.
+
+Your objectives:
+1. Review the full Bank Statement data and determine whether the bookkeeping appears accurate.
+2. Detect bookkeeping errors including:
+   - Entries posted to the wrong account
+   - Unbalanced or illogical journal patterns
+   - Incorrect debit/credit signs
+   - Missing postings or duplicate transactions
+   - Inconsistent descriptions versus account coding
+   - Opening and closing balance issues
+   - Accounts classified incorrectly between Income Statement and Balance Sheet
+   - GST calculation issues
+   - Tax provision or tax liability errors
+3. Check whether transaction behaviour is consistent with normal bookkeeping logic.
+4. Check whether totals, balances, and account movement appear reasonable.
+5. Pay special attention to:
+   - Whether opening balances reconcile logically to transaction activity
+   - Whether closing balances are consistent with postings
+   - Whether Income Statement accounts behave as periodic accounts
+   - Whether Balance Sheet accounts behave as cumulative accounts
+   - Whether GST entries are correctly applied
+   - Whether tax provision and final tax liability are reasonable
+
+Classify each finding as one of:
+- Confirmed error
+- Likely error
+- Possible issue
+- Review note
+
+Provide your answer in these sections:
+
+A. OVERALL CONCLUSION
+State whether the bookkeeping appears accurate, mostly accurate with exceptions, or materially incorrect.
+
+B. KEY ERRORS FOUND
+For each issue: classification, row/account involved, why it appears incorrect, suggested correction.
+
+C. BALANCE AND LOGIC CHECKS
+Explain whether opening balances, closing balances, and account classifications appear consistent.
+Note unusual patterns or accounts requiring manual review.
+
+D. GST AND TAX REVIEW
+Review GST calculation, tax provision entries, and final tax liability.
+State any inconsistencies, calculation concerns, or presentation issues.
+
+E. TOP 10 HIGHEST-RISK ITEMS FOR MANUAL REVIEW
+Rank the top 10 rows, accounts, or tax items that most need human review.
+
+F. ITEMS REQUIRING HUMAN CONFIRMATION
+List any items that may be valid but need client or bookkeeper confirmation.
+
+Be skeptical and analytical. Do not assume the workbook is correct.
+Use exact row and column references wherever possible.
+If evidence is insufficient to prove an error, label it as "Possible issue".
+
+Financial and transaction data extracted from this file:
+{context}"""
+        },
     }
 
     if prompt_type not in prompts:
@@ -292,12 +363,13 @@ Financial data:
 def get_prompt_labels():
     """Return list of (key, label) for all prompts."""
     return [
-        ("full_review",       "🔍 Full File Review"),
-        ("tax_planning",      "💡 Tax Planning"),
-        ("missing_expenses",  "🔎 Missing Expenses"),
-        ("staff_queries",     "📋 Staff Queries"),
-        ("management_summary","📊 Management Report"),
-        ("client_summary",    "✉️ Client Summary"),
-        ("engagement_notes",  "📁 Engagement Notes"),
-        ("unusual_items",     "🚩 Flag Unusual Items"),
+        ("full_review",           "🔍 Full File Review"),
+        ("tax_planning",          "💡 Tax Planning"),
+        ("missing_expenses",      "🔎 Missing Expenses"),
+        ("staff_queries",         "📋 Staff Queries"),
+        ("management_summary",    "📊 Management Report"),
+        ("client_summary",        "✉️ Client Summary"),
+        ("engagement_notes",      "📁 Engagement Notes"),
+        ("unusual_items",         "🚩 Flag Unusual Items"),
+        ("bank_statement_review", "🏦 Bank Statement Review"),
     ]
