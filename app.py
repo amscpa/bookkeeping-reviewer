@@ -86,13 +86,17 @@ with st.sidebar:
     )
 
     st.divider()
-    api_key = st.text_input(
-        "OpenAI API key",
-        type="password",
-        placeholder="sk-...",
-        help="Your ChatGPT API key. Get one at platform.openai.com"
-    )
-
+    import os
+    api_key = st.secrets.get("OPENAI_API_KEY", "") if hasattr(st, "secrets") else ""
+    if not api_key:
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
+        api_key = st.text_input(
+            "OpenAI API key (not found in secrets)",
+            type="password",
+            placeholder="sk-...",
+            help="Add OPENAI_API_KEY to Streamlit secrets for auto-loading"
+        )
     if api_key:
         st.success("API key set ✓")
 
