@@ -360,10 +360,15 @@ with st.sidebar:
     uname = st.session_state.get("_username", "user")
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,#3b37cc,#7c3aed);
-                border-radius:10px;padding:10px 14px;margin-bottom:8px">
-        <div style="font-size:11px;color:rgba(255,255,255,.6);
-                    text-transform:uppercase;letter-spacing:.06em">Signed in as</div>
-        <div style="font-size:14px;font-weight:700;color:#fff">👤 {uname}</div>
+                border-radius:10px;padding:12px 16px;margin-bottom:8px;
+                box-shadow:0 4px 14px rgba(59,55,204,.35)">
+        <div style="font-size:10px;color:rgba(255,255,255,.65);
+                    text-transform:uppercase;letter-spacing:.12em;
+                    font-weight:600;margin-bottom:4px">● Signed in as</div>
+        <div style="font-size:17px;font-weight:800;color:#ffffff;
+                    letter-spacing:.01em;font-family:'Segoe UI',sans-serif">
+            👤 &nbsp;{uname.upper()}
+        </div>
     </div>
     """, unsafe_allow_html=True)
     if st.button("🚪 Sign Out", use_container_width=True):
