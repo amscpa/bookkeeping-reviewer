@@ -4,6 +4,7 @@ Streamlit + ChatGPT — Senior CPA review tool for Alberta bookkeeping files.
 """
 import streamlit as st
 from io import BytesIO
+from datetime import datetime
 
 st.set_page_config(
     page_title="Bookkeeping Reviewer",
@@ -162,7 +163,7 @@ with st.sidebar:
 
 
 # ── Firm name (edit this to your firm name) ────────────────────────────────────
-FIRM_NAME    = "JAINIM CONSULTING INC"
+FIRM_NAME    = "Tanupriya Prasad Professional Corporation"
 FIRM_TAGLINE = "Bookkeeping & Tax Review Portal  ·  Powered by AI"
 
 # ── Main area ──────────────────────────────────────────────────────────────────
@@ -266,7 +267,7 @@ with c6:
 st.divider()
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3 = st.tabs(["⚡ Automatic Checks", "🤖 AI Review", "📄 Download Report"])
+tab1, tab2, tab3, tab4 = st.tabs(["⚡ Automatic Checks", "🤖 AI Review", "📄 Download Report", "📧 Email Report"])
 
 
 # ── Tab 1: Automatic Checks ────────────────────────────────────────────────────
@@ -316,7 +317,7 @@ with tab2:
         st.markdown("---")
         st.markdown("**Once your API key is entered, 8 CPA review prompts will appear here:**")
         for label in ["🔍 Full File Review", "💡 Tax Planning", "🔎 Missing Expenses", "📋 Staff Queries",
-                      "📊 Management Report", "✉️ Client Summary", "📁 Engagement Notes", "🚩 Flag Unusual Items"]:
+                      "🔍 Full File Review", "🏦 Bank Statement Review", "🔎 Missing Expenses", "🚩 Flag Unusual Items", "📊 Management Report", "✉️ Client Summary", "💡 Tax Planning", "📁 Engagement Notes", "📋 Staff Queries"]:
             st.markdown(f"&nbsp;&nbsp;&nbsp;▸ {label}", unsafe_allow_html=True)
     else:
         from ai_review import run_prompt, get_prompt_labels
@@ -357,7 +358,7 @@ with tab2:
         # Run all button
         col_run, col_clear = st.columns([2, 1])
         with col_run:
-            if st.button("▶ Run ALL 9 prompts", type="primary", use_container_width=True):
+            if st.button("⚡ Engage AI Power — Run All 9 Prompts", type="primary", use_container_width=True):
                 progress = st.progress(0)
                 status   = st.empty()
                 for i, (key, label) in enumerate(prompt_labels):
@@ -368,7 +369,7 @@ with tab2:
                     except Exception as e:
                         st.session_state.ai_results[key] = f"Error: {e}"
                     progress.progress((i + 1) / len(prompt_labels))
-                status.success("All 8 prompts complete! Go to Download tab.")
+                status.success("✅ All 9 prompts complete! Go to Download & Email tab.")
         with col_clear:
             if st.button("Clear results", use_container_width=True):
                 st.session_state.ai_results = {}
@@ -485,3 +486,279 @@ with tab3:
 
     st.divider()
     st.markdown("*Files are generated in memory and not stored anywhere.*")
+
+
+# ── Tab 4: Email Report ────────────────────────────────────────────────────────
+with tab4:
+    st.markdown("#### 📧 Email Review Report")
+    st.markdown("Generate a report and send it directly to any email address.")
+    st.divider()
+
+    ai_results_em = st.session_state.get("ai_results", {})
+
+    # ── Format selector ───────────────────────────────────────────────────
+    st.markdown("**Step 1 — Choose report format**")
+    col_fmt1, col_fmt2, col_fmt3 = st.columns(3)
+    with col_fmt1:
+        send_pdf  = st.checkbox("📕 Attach PDF report",  value=True)
+    with col_fmt2:
+        send_word = st.checkbox("📘 Attach Word document", value=False)
+    with col_fmt3:
+        send_inline = st.checkbox("📝 Include summary in email body", value=True)
+
+    st.divider()
+
+    # ── Auto-load SMTP from Streamlit secrets ─────────────────────────────
+    def _secret(key, default=""):
+        try:
+            return st.secrets[key]
+        except Exception:
+            return default
+
+    _smtp_host_def = _secret("SMTP_HOST", "smtp.gmail.com")
+    _smtp_port_def = int(_secret("SMTP_PORT", "587"))
+    _smtp_user_def = _secret("SMTP_USER", "")
+    _smtp_pass_def = _secret("SMTP_PASSWORD", "")
+    _smtp_from_def = _secret("SMTP_FROM", "")
+
+    _secrets_loaded = bool(_smtp_user_def and _smtp_pass_def)
+    if _secrets_loaded:
+        st.success("✅ Email credentials loaded from Streamlit Secrets — no setup needed")
+
+    # ── Email details ─────────────────────────────────────────────────────
+    st.markdown("**Step 2 — Enter email details**")
+    col_e1, col_e2 = st.columns(2)
+    with col_e1:
+        to_email = st.text_input(
+            "To (recipient email)",
+            placeholder="partner@yourfirm.com",
+            help="Who should receive this report?"
+        )
+    with col_e2:
+        from_email = st.text_input(
+            "From (your email)",
+            value=_smtp_from_def,
+            placeholder="you@yourfirm.com",
+            help="Auto-loaded from Streamlit Secrets if set"
+        )
+
+    col_e3, col_e4 = st.columns(2)
+    with col_e3:
+        client_nm = data.get("client_name", "Client")
+        yr_e = str(data.get("year_end", ""))[:10]
+        subject = st.text_input(
+            "Subject",
+            value=f"Bookkeeping Review Report — {client_nm} — Year ended {yr_e}"
+        )
+    with col_e4:
+        cc_email = st.text_input(
+            "CC (optional)",
+            placeholder="manager@yourfirm.com"
+        )
+
+    st.divider()
+
+    # ── SMTP settings ─────────────────────────────────────────────────────
+    expander_label = (
+        "✅ SMTP settings loaded from Streamlit Secrets — click to override"
+        if _secrets_loaded else
+        "⚙️ Configure email server (required)"
+    )
+    with st.expander(expander_label, expanded=not _secrets_loaded):
+        if _secrets_loaded:
+            st.info(
+                f"Using: **{_smtp_user_def}** via **{_smtp_host_def}:{_smtp_port_def}** "
+                f"— loaded from Streamlit Secrets automatically. "
+                f"Expand this panel only if you want to override."
+            )
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            smtp_host = st.text_input("SMTP Host",
+                value=_smtp_host_def,
+                help="Gmail: smtp.gmail.com  |  Outlook: smtp.office365.com")
+            smtp_user = st.text_input("SMTP Username / Email",
+                value=_smtp_user_def,
+                placeholder="you@gmail.com")
+        with col_s2:
+            smtp_port = st.number_input("SMTP Port", value=_smtp_port_def, step=1)
+            smtp_pass = st.text_input("SMTP Password / App Password",
+                value=_smtp_pass_def,
+                type="password",
+                help="Auto-loaded from Streamlit Secrets if set")
+
+        if not _secrets_loaded:
+            st.info("""
+**Save permanently:** Go to share.streamlit.io → your app → ⋯ → Settings → Secrets and add:
+
+```
+SMTP_HOST     = "smtp.gmail.com"
+SMTP_PORT     = "587"
+SMTP_USER     = "you@gmail.com"
+SMTP_PASSWORD = "your-16-char-app-password"
+SMTP_FROM     = "you@gmail.com"
+```
+
+**Gmail App Password:** myaccount.google.com → Security → App Passwords → Mail → Generate
+**Outlook:** smtp.office365.com, port 587, your regular password
+        """)
+
+    # ── Preview & send ────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("**Step 4 — Preview & send**")
+
+    # Build inline summary
+    from auto_checks import summarize_checks
+    counts_em = summarize_checks(checks)
+
+    def build_email_body():
+        lines = []
+        lines.append(f"BOOKKEEPING REVIEW REPORT")
+        lines.append(f"{'='*50}")
+        lines.append(f"Client:      {data.get('client_name','')}")
+        lines.append(f"Year ended:  {yr_e}")
+        lines.append(f"Prepared by: {data.get('prepared_by','')}")
+        lines.append(f"Reviewer:    {data.get('signer','')}")
+        lines.append(f"Generated:   {datetime.now().strftime('%B %d, %Y %H:%M')}")
+        lines.append("")
+        lines.append("REVIEW SUMMARY")
+        lines.append("-" * 40)
+        lines.append(f"  Critical issues : {counts_em['critical']}")
+        lines.append(f"  Warnings        : {counts_em['warning']}")
+        lines.append(f"  Info items      : {counts_em['info']}")
+        lines.append(f"  Passed checks   : {counts_em['pass']}")
+        lines.append("")
+        lines.append("KEY FINANCIALS")
+        lines.append("-" * 40)
+        lines.append(f"  Revenue CY   : ${data.get('total_revenue_cy',0):,.0f}  |  PY: ${data.get('total_revenue_py',0):,.0f}")
+        lines.append(f"  Expenses CY  : ${data.get('total_expenses_cy',0):,.0f}  |  PY: ${data.get('total_expenses_py',0):,.0f}")
+        lines.append(f"  Net Income CY: ${data.get('net_income_cy',0):,.0f}  |  PY: ${data.get('net_income_py',0):,.0f}")
+        lines.append(f"  Total Assets : ${data.get('total_assets_cy',0):,.0f}")
+        if ai_results_em:
+            lines.append("")
+            lines.append("AI REVIEW SECTIONS INCLUDED")
+            lines.append("-" * 40)
+            PTITLES = {
+                "full_review":"Full File Review","bank_statement_review":"Bank Statement Audit",
+                "missing_expenses":"Missing Expenses","unusual_items":"Flag Unusual Items",
+                "management_summary":"Management Report","client_summary":"Client Summary",
+                "tax_planning":"Tax Planning","engagement_notes":"Engagement Notes",
+                "staff_queries":"Staff Queries"
+            }
+            for k in ai_results_em:
+                lines.append(f"  • {PTITLES.get(k, k)}")
+        lines.append("")
+        lines.append("This report was generated by the Bookkeeping Reviewer system.")
+        lines.append("Please review the attached document for full details.")
+        return "\n".join(lines)
+
+    email_body_preview = build_email_body()
+
+    if send_inline:
+        with st.expander("📋 Preview email body", expanded=False):
+            st.code(email_body_preview, language="text")
+
+    col_send, col_test = st.columns([2, 1])
+
+    with col_send:
+        send_clicked = st.button(
+            "📧 Send Report Email",
+            type="primary",
+            use_container_width=True,
+            disabled=not (to_email and from_email)
+        )
+
+    with col_test:
+        if st.button("Send test to myself", use_container_width=True,
+                     disabled=not from_email):
+            to_email = from_email  # override to = from for test
+
+    if send_clicked or (not (to_email and from_email) and st.session_state.get("_send_attempted")):
+        st.session_state["_send_attempted"] = True
+        if not to_email:
+            st.error("Please enter a recipient email address.")
+        elif not from_email:
+            st.error("Please enter your from email address.")
+        elif not locals().get("smtp_host") or not locals().get("smtp_user") or not locals().get("smtp_pass"):
+            st.warning("⚠️ Configure your SMTP settings above before sending.")
+        else:
+            with st.spinner("Generating report and sending email..."):
+                try:
+                    import smtplib
+                    from email.mime.multipart import MIMEMultipart
+                    from email.mime.text import MIMEText
+                    from email.mime.base import MIMEBase
+                    from email import encoders
+
+                    msg = MIMEMultipart()
+                    msg["From"]    = from_email
+                    msg["To"]      = to_email
+                    msg["Subject"] = subject
+                    if cc_email:
+                        msg["Cc"] = cc_email
+
+                    # Body
+                    body_text = email_body_preview if send_inline else (
+                        f"Please find the bookkeeping review report for {client_nm} attached.\n\n"
+                        f"Year ended: {yr_e}\n"
+                        f"Generated: {datetime.now().strftime('%B %d, %Y')}"
+                    )
+                    msg.attach(MIMEText(body_text, "plain"))
+
+                    client_safe = data.get("client_name","client").replace(" ","_").replace(".","")
+                    yr_fn = str(data.get("year_end",""))[:7].replace("-","")
+
+                    # PDF attachment
+                    if send_pdf:
+                        from report_gen import generate_pdf
+                        pdf_bytes = generate_pdf(data, checks, ai_results_em)
+                        part = MIMEBase("application", "octet-stream")
+                        part.set_payload(pdf_bytes)
+                        encoders.encode_base64(part)
+                        part.add_header("Content-Disposition",
+                            f"attachment; filename=Review_{client_safe}_{yr_fn}.pdf")
+                        msg.attach(part)
+
+                    # Word attachment
+                    if send_word:
+                        from report_gen import generate_word
+                        word_bytes = generate_word(data, checks, ai_results_em)
+                        part2 = MIMEBase("application", "octet-stream")
+                        part2.set_payload(word_bytes)
+                        encoders.encode_base64(part2)
+                        part2.add_header("Content-Disposition",
+                            f"attachment; filename=Review_{client_safe}_{yr_fn}.docx")
+                        msg.attach(part2)
+
+                    # Send
+                    recipients = [to_email]
+                    if cc_email:
+                        recipients.append(cc_email)
+
+                    with smtplib.SMTP(smtp_host, int(smtp_port)) as server:
+                        server.ehlo()
+                        server.starttls()
+                        server.login(smtp_user, smtp_pass)
+                        server.sendmail(from_email, recipients, msg.as_string())
+
+                    attachments = []
+                    if send_pdf:  attachments.append("PDF")
+                    if send_word: attachments.append("Word")
+                    attach_str = " + ".join(attachments) if attachments else "body only"
+                    st.success(f"✅ Email sent successfully to **{to_email}** ({attach_str})")
+
+                except smtplib.SMTPAuthenticationError:
+                    st.error("❌ Authentication failed. Check your email/password. Gmail users: use an App Password.")
+                except smtplib.SMTPException as e:
+                    st.error(f"❌ SMTP error: {e}")
+                except Exception as e:
+                    st.error(f"❌ Error: {e}")
+
+    st.divider()
+    st.markdown("""
+**Quick setup guide:**
+- **Gmail:** Enable 2-step verification → Google Account → Security → App Passwords → Mail → copy 16-char password
+- **Outlook:** Use smtp.office365.com, port 587, your regular email and password
+- **Other:** Ask your IT team for SMTP relay credentials
+
+*Email credentials are never stored — entered only for the current session.*
+""")
