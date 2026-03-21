@@ -715,7 +715,59 @@ def build_word(sections: list[dict], cy: str, py: str,
 # Custom CSS — keeps branding consistent with the main app
 st.markdown("""
 <style>
+/* ── Sidebar background ── */
 [data-testid="stSidebar"] { background: #1B2A4A; }
+
+/* ── ALL sidebar labels → white/light so visible on dark navy ── */
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stTextInput label,
+[data-testid="stSidebar"] .stSelectbox label,
+[data-testid="stSidebar"] .stTextInput > div > label,
+[data-testid="stSidebar"] .stSelectbox > div > label {
+    color: #E8EDF5 !important;
+    font-weight: 500 !important;
+    font-size: 0.88rem !important;
+}
+
+/* ── Sidebar headings → gold accent ── */
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h2 {
+    color: #F0A500 !important;
+    font-weight: 700 !important;
+}
+
+/* ── Sidebar body paragraphs ── */
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] .stMarkdown p {
+    color: #C8D4E8 !important;
+}
+
+/* ── Sidebar caption / small text ── */
+[data-testid="stSidebar"] small,
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] .stCaption p {
+    color: #8FA0BE !important;
+}
+
+/* ── Sidebar input boxes → light background, dark text ── */
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] .stTextInput input {
+    color: #1B2A4A !important;
+    background: #F4F7FB !important;
+    border-radius: 6px !important;
+}
+
+/* ── Sidebar selectbox ── */
+[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
+    background: #F4F7FB !important;
+    color: #1B2A4A !important;
+    border-radius: 6px !important;
+}
+
+/* ── Sidebar divider ── */
+[data-testid="stSidebar"] hr { border-color: #2E4470 !important; }
+
+/* ── Hero banner ── */
 .yoy-hero {
     background: linear-gradient(135deg, #1B2A4A 0%, #2E86AB 100%);
     padding: 2rem 2.5rem 1.5rem;
@@ -725,6 +777,8 @@ st.markdown("""
 }
 .yoy-hero h1 { margin: 0; font-size: 2rem; font-weight: 800; color: white; }
 .yoy-hero p  { margin: 0.4rem 0 0; font-size: 1rem; opacity: 0.85; color: white; }
+
+/* ── Section cards ── */
 .section-card {
     background: #f4f7fb;
     border-left: 5px solid #2E86AB;
@@ -809,13 +863,13 @@ col_py, col_cy = st.columns(2)
 with col_py:
     st.markdown("#### Prior Year")
     py_label = st.text_input("Year label", value="2023", key="yoy_py_lbl")
-    py_file  = st.file_uploader("Upload Prior Year Excel", type=["xlsx","xls"],
+    py_file  = st.file_uploader("Upload Prior Year Excel", type=["xlsx","xls","xlsm"],
                                  key="yoy_py_file")
 
 with col_cy:
     st.markdown("#### Current Year")
     cy_label = st.text_input("Year label", value="2024", key="yoy_cy_lbl")
-    cy_file  = st.file_uploader("Upload Current Year Excel", type=["xlsx","xls"],
+    cy_file  = st.file_uploader("Upload Current Year Excel", type=["xlsx","xls","xlsm"],
                                  key="yoy_cy_file")
 
 # ── Sheet selection ──────────────────────────────────────────────────────────
