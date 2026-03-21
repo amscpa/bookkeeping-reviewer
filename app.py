@@ -13,6 +13,169 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  AUTHENTICATION  — runs before anything else is rendered
+# ══════════════════════════════════════════════════════════════════════════════
+import hashlib, time
+
+def _hash(pw: str) -> str:
+    return hashlib.sha256(pw.strip().encode()).hexdigest()
+
+def _load_users() -> dict:
+    """
+    Load users from Streamlit Secrets.
+    Format in secrets.toml:
+        [users]
+        tanupriya = "sha256hashofpassword"
+        yash      = "sha256hashofpassword"
+    Falls back to a default admin account if secrets not set.
+    """
+    try:
+        return dict(st.secrets["users"])
+    except Exception:
+        # Default credentials if no secrets set — change immediately after first login
+        return {
+            "admin": _hash("tppc2024")
+        }
+
+def _show_login():
+    """Render the full-screen login page."""
+    # Hide sidebar completely on login screen
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="stSidebarNav"] { display: none !important; }
+    .stApp { background: linear-gradient(135deg, #1e1b5e 0%, #3b37cc 50%, #7c3aed 100%) !important; }
+    div.block-container { padding-top: 0 !important; max-width: 100% !important; }
+
+    /* Login card */
+    .login-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2.8rem 2.5rem 2.2rem;
+        box-shadow: 0 25px 60px rgba(0,0,0,.35);
+        max-width: 420px;
+        margin: 5vh auto 0;
+    }
+    .login-logo {
+        text-align: center;
+        font-size: 48px;
+        margin-bottom: 0.3rem;
+    }
+    .login-firm {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 800;
+        color: #2d27aa;
+        margin-bottom: 0.2rem;
+        line-height: 1.3;
+    }
+    .login-tagline {
+        text-align: center;
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 1.8rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+    .login-divider {
+        border: none;
+        border-top: 1px solid #e2e8f0;
+        margin: 0 0 1.4rem;
+    }
+    .login-footer {
+        text-align: center;
+        font-size: 11px;
+        color: rgba(255,255,255,.45);
+        margin-top: 1.8rem;
+    }
+    /* Make inputs look clean */
+    .stTextInput > div > div > input {
+        border-radius: 8px !important;
+        border: 1.5px solid #e2e8f0 !important;
+        font-size: 14px !important;
+        padding: 0.6rem 0.8rem !important;
+        color: #0f172a !important;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(79,70,229,.15) !important;
+    }
+    .stTextInput label { color: #374151 !important; font-weight: 600 !important; font-size: 13px !important; }
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #3b37cc, #7c3aed) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        padding: 0.65rem !important;
+        color: white !important;
+        box-shadow: 0 4px 14px rgba(79,70,229,.35) !important;
+        transition: opacity .15s !important;
+    }
+    .stButton > button[kind="primary"]:hover { opacity: 0.9 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    FIRM_NAME_L = "JAINIM CONSULTING INC."
+    FIRM_TAG_L  = "Bookkeeping & Tax Review Portal"
+
+    # Login card
+    st.markdown(f"""
+    <div class="login-card">
+        <div class="login-logo">🏢</div>
+        <div class="login-firm">{FIRM_NAME_L}</div>
+        <div class="login-tagline">{FIRM_TAG_L}</div>
+        <hr class="login-divider"/>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Centre the form using columns
+    _, col, _ = st.columns([1, 2, 1])
+    with col:
+        st.markdown('<div style="background:#fff;border-radius:0 0 20px 20px;padding:0 2.5rem 2.2rem;'
+                    'max-width:420px;margin:-8px auto 0;box-shadow:0 25px 60px rgba(0,0,0,.35)">',
+                    unsafe_allow_html=True)
+
+        username = st.text_input("Username", placeholder="Enter your username",
+                                 key="login_user")
+        password = st.text_input("Password", placeholder="Enter your password",
+                                 type="password", key="login_pass")
+
+        if st.session_state.get("_login_error"):
+            st.markdown("""<div style="background:#fff0f0;border:1px solid #fca5a5;
+                border-radius:8px;padding:8px 12px;font-size:13px;color:#dc2626;
+                margin-bottom:8px">⚠️ Incorrect username or password. Please try again.</div>""",
+                unsafe_allow_html=True)
+
+        login_btn = st.button("Sign In  →", type="primary", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        if login_btn:
+            users = _load_users()
+            if username.strip() in users and users[username.strip()] == _hash(password):
+                st.session_state["_authenticated"] = True
+                st.session_state["_username"]      = username.strip()
+                st.session_state["_login_error"]   = False
+                st.rerun()
+            else:
+                st.session_state["_login_error"] = True
+                time.sleep(0.8)   # brief delay to slow brute-force
+                st.rerun()
+
+    st.markdown(f"""
+    <div class="login-footer">
+        🔒 &nbsp;Secure access — authorised users only<br/>
+        {FIRM_NAME_L} &nbsp;·&nbsp; Powered by AI
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ── Gate: show login or run app ────────────────────────────────────────────────
+if not st.session_state.get("_authenticated"):
+    _show_login()
+    st.stop()
+
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -118,6 +281,21 @@ st.markdown("""
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
+    # ── User info + logout ─────────────────────────────────────────────────
+    uname = st.session_state.get("_username", "user")
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg,#3b37cc,#7c3aed);
+                border-radius:10px;padding:10px 14px;margin-bottom:8px">
+        <div style="font-size:11px;color:rgba(255,255,255,.6);
+                    text-transform:uppercase;letter-spacing:.06em">Signed in as</div>
+        <div style="font-size:14px;font-weight:700;color:#fff">👤 {uname}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🚪 Sign Out", use_container_width=True):
+        for k in ["_authenticated","_username","_login_error","ai_results","active_prompt"]:
+            st.session_state.pop(k, None)
+        st.rerun()
+    st.divider()
     st.markdown("### 📋 Bookkeeping Reviewer")
     st.markdown("*Senior CPA review tool*")
     st.divider()
@@ -163,7 +341,7 @@ with st.sidebar:
 
 
 # ── Firm name (edit this to your firm name) ────────────────────────────────────
-FIRM_NAME    = "JAINIM CONSULTING INC"
+FIRM_NAME    = "Tanupriya Prasad Professional Corporation"
 FIRM_TAGLINE = "Bookkeeping & Tax Review Portal  ·  Powered by AI"
 
 # ── Main area ──────────────────────────────────────────────────────────────────
