@@ -495,7 +495,7 @@ def generate_pdf(data, checks, ai_results):
         "bank_statement_review": "Bank Statement Audit Review",
     }
     SEC_FILLS = [INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE,
-                 INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE]
+                 INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE, INDIGO_DARK]
 
     for si, (key, content) in enumerate(ai_results.items()):
         if not content:
@@ -836,7 +836,7 @@ def generate_word(data, checks, ai_results):
         "bank_statement_review": "Bank Statement Audit Review",
     }
     SEC_FILLS = [INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE,
-                 INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE]
+                 INDIGO_DARK, PURPLE, INDIGO_DARK, PURPLE, INDIGO_DARK]
 
     for si, (key, content) in enumerate(ai_results.items()):
         if not content:
