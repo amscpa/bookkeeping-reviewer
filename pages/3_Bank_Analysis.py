@@ -238,12 +238,13 @@ def extract_bank_data(uploaded_file, sheet_name: str) -> dict:
 # COMPARISON BUILDER
 # ══════════════════════════════════════════════════════════════════════════════
 
-def build_comparison(cy_accounts: list, py_accounts: list) -> list:
+def build_comparison(cy_data: dict, py_data: dict) -> list:
     """
     Match accounts by name across two years and build a comparison list.
-    Returns [{name, acct_type, cy_net, py_net, change_dollar, change_pct,
-              cy_txns, py_txns}]
+    Accepts dicts returned by extract_bank_data (with 'accounts' key).
     """
+    cy_accounts = cy_data["accounts"]
+    py_accounts = py_data["accounts"]
     py_map = {a["name"]: a for a in py_accounts}
     cy_map = {a["name"]: a for a in cy_accounts}
 
