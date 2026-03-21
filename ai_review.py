@@ -364,12 +364,12 @@ def get_prompt_labels():
     """Return list of (key, label) for all prompts."""
     return [
         ("full_review",           "🔍 Full File Review"),
-        ("tax_planning",          "💡 Tax Planning"),
+        ("bank_statement_review", "🏦 Bank Statement Review"),
         ("missing_expenses",      "🔎 Missing Expenses"),
-        ("staff_queries",         "📋 Staff Queries"),
+        ("unusual_items",         "🚩 Flag Unusual Items"),
         ("management_summary",    "📊 Management Report"),
         ("client_summary",        "✉️ Client Summary"),
+        ("tax_planning",          "💡 Tax Planning"),
         ("engagement_notes",      "📁 Engagement Notes"),
-        ("unusual_items",         "🚩 Flag Unusual Items"),
-        ("bank_statement_review", "🏦 Bank Statement Review"),
+        ("staff_queries",         "📋 Staff Queries"),
     ]
