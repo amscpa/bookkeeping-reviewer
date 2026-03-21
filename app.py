@@ -408,7 +408,7 @@ with st.sidebar:
 
 
 # ── Firm name (edit this to your firm name) ────────────────────────────────────
-FIRM_NAME    = "JAINIM CONSULTING INC"
+FIRM_NAME    = "Tanupriya Prasad Professional Corporation"
 FIRM_TAGLINE = "Bookkeeping & Tax Review Portal  ·  Powered by AI"
 
 # ── Main area ──────────────────────────────────────────────────────────────────
