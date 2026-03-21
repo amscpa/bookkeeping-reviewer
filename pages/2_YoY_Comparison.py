@@ -809,18 +809,30 @@ st.markdown("""
 with st.sidebar:
     st.markdown("### ⚙️ Settings")
 
-    # API key: try session_state first (shared from main app), else ask here
-    api_key = st.session_state.get("api_key", "")
+    # API key: read from Streamlit Secrets first (same source as main app),
+    # then session_state, then ask manually as last resort
+    api_key = ""
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        pass
+    if not api_key:
+        try:
+            api_key = st.secrets["openai"]["api_key"]
+        except Exception:
+            pass
+    if not api_key:
+        api_key = st.session_state.get("api_key", "")
     if not api_key:
         api_key = st.text_input(
             "OpenAI API Key",
             type="password",
             placeholder="sk-…",
-            help="Enter your OpenAI API key. It is not stored anywhere.",
+            help="Not found in Streamlit Secrets — enter manually.",
             key="yoy_api_key_input"
         )
     else:
-        st.success("✅ API key loaded from main page")
+        st.success("✅ API key loaded from Streamlit Secrets")
 
     model = st.selectbox(
         "AI Model",
