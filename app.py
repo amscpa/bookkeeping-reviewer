@@ -76,7 +76,7 @@ def _show_login():
         padding: 2.6rem 2.4rem 2rem;
         box-shadow: 0 30px 80px rgba(0,0,0,.40),
                     0 0 0 1px rgba(255,255,255,.5);
-        max-width: 420px;
+        max-width: 600px;
         margin: 0 auto;
     }
     .login-badge {
@@ -179,7 +179,7 @@ def _show_login():
     # Layout: push card to vertical centre
     st.markdown("<div style='height:6vh'></div>", unsafe_allow_html=True)
 
-    _, col, _ = st.columns([1, 1.6, 1])
+    _, col, _ = st.columns([0.5, 3, 0.5])
     with col:
         # Card header (pure HTML)
         st.markdown(f"""
