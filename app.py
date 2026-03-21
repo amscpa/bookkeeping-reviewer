@@ -163,34 +163,56 @@ with st.sidebar:
 
 
 # ── Firm name (edit this to your firm name) ────────────────────────────────────
-FIRM_NAME    = "Tanupriya Prasad Professional Corporation"
+FIRM_NAME    = "JAINIM CONSULTING INC"
 FIRM_TAGLINE = "Bookkeeping & Tax Review Portal  ·  Powered by AI"
 
 # ── Main area ──────────────────────────────────────────────────────────────────
 if not uploaded_file:
-    st.markdown("""
-    <div style="text-align:center;padding:4rem 2rem;background:#f5f7fa">
-        <div style="font-size:60px;margin-bottom:1rem">📋</div>
-        <div style="font-size:24px;font-weight:700;color:#1e293b;margin-bottom:8px">Bookkeeping File Reviewer</div>
-        <div style="font-size:15px;color:#64748b;margin-bottom:2rem">
-            Upload a completed bookkeeping Excel file to begin your CPA review
+    # ── Big firm hero banner on startup ────────────────────────────────────
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #2d27aa 0%, #7c3aed 100%);
+        border-radius: 18px; padding: 3rem 2.5rem; margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px rgba(59,55,204,.28); text-align: center;
+    ">
+        <div style="font-size: 52px; margin-bottom: 0.8rem;">🏢</div>
+        <div style="font-size: 32px; font-weight: 900; color: #ffffff;
+                    letter-spacing: .01em; margin-bottom: 0.5rem;">
+            {FIRM_NAME}
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:700px;margin:0 auto">
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-                <div style="font-size:24px;margin-bottom:8px">⚡</div>
-                <div style="font-weight:600;color:#1e293b;margin-bottom:4px">25 Auto Checks</div>
-                <div style="font-size:12px;color:#64748b">Math, balancing & consistency checks in seconds</div>
-            </div>
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-                <div style="font-size:24px;margin-bottom:8px">🤖</div>
-                <div style="font-weight:600;color:#1e293b;margin-bottom:4px">8 AI Prompts</div>
-                <div style="font-size:12px;color:#64748b">Tax planning, missing expenses, staff queries & more</div>
-            </div>
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-                <div style="font-size:24px;margin-bottom:8px">📄</div>
-                <div style="font-weight:600;color:#1e293b;margin-bottom:4px">PDF & Word</div>
-                <div style="font-size:12px;color:#64748b">Professional formatted reports ready for your file</div>
-            </div>
+        <div style="font-size: 15px; color: rgba(255,255,255,.75);
+                    font-weight: 400; margin-bottom: 2rem;">
+            {FIRM_TAGLINE}
+        </div>
+        <div style="display:inline-block; background:rgba(255,255,255,.15);
+                    border: 1px solid rgba(255,255,255,.3); border-radius: 10px;
+                    padding: 0.55rem 1.4rem; font-size:13px; color:#fff;
+                    font-weight:600; letter-spacing:.03em;">
+            ⬆ Upload an Excel file in the sidebar to begin your review
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Feature cards ───────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:1.5rem">
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;
+                    padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.07);text-align:center">
+            <div style="font-size:30px;margin-bottom:10px">⚡</div>
+            <div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:5px">25 Auto Checks</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5">Math, balancing &amp; consistency checks run instantly — no AI needed</div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;
+                    padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.07);text-align:center">
+            <div style="font-size:30px;margin-bottom:10px">🤖</div>
+            <div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:5px">9 AI Prompts</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5">Tax planning, bank audit, missing expenses, CRA flags &amp; more</div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;
+                    padding:22px;box-shadow:0 1px 6px rgba(0,0,0,.07);text-align:center">
+            <div style="font-size:30px;margin-bottom:10px">📄</div>
+            <div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:5px">PDF · Word · Email</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5">Branded professional reports — download or send directly by email</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
