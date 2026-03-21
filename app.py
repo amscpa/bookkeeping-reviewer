@@ -72,30 +72,30 @@ def _show_login():
         background: rgba(255,255,255,0.92);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
-        border-radius: 24px;
-        padding: 2.6rem 2.4rem 2rem;
+        border-radius: 28px;
+        padding: 3.2rem 5rem 2.8rem;
         box-shadow: 0 30px 80px rgba(0,0,0,.40),
                     0 0 0 1px rgba(255,255,255,.5);
-        max-width: 600px;
+        max-width: 940px;
         margin: 0 auto;
     }
     .login-badge {
         display: inline-block;
         background: linear-gradient(135deg,#3b37cc,#7c3aed);
         color: #fff;
-        font-size: 10px; font-weight: 700;
+        font-size: 13px; font-weight: 700;
         letter-spacing: .1em; text-transform: uppercase;
-        padding: 3px 12px; border-radius: 20px;
-        margin-bottom: 1rem;
+        padding: 6px 20px; border-radius: 20px;
+        margin-bottom: 1.4rem;
     }
     .login-firm {
-        font-size: 20px; font-weight: 900;
-        color: #1e1b5e; line-height: 1.25;
-        margin-bottom: 0.3rem;
+        font-size: 36px; font-weight: 900;
+        color: #1e1b5e; line-height: 1.2;
+        margin-bottom: 0.6rem;
     }
     .login-tagline {
-        font-size: 12px; color: #64748b;
-        margin-bottom: 1.6rem;
+        font-size: 16px; color: #64748b;
+        margin-bottom: 2rem;
         letter-spacing: .04em;
     }
     .login-divider {
@@ -103,8 +103,9 @@ def _show_login():
         margin: 0 0 1.4rem;
     }
     .login-heading {
-        font-size: 16px; font-weight: 800;
+        font-size: 18px; font-weight: 800;
         color: #0f172a; margin-bottom: 1.2rem;
+        text-align: center;
     }
     /* Inputs */
     .stTextInput > div > div > input {
@@ -158,16 +159,22 @@ def _show_login():
     }
     /* Feature pills */
     .feat-row {
-        display: flex; gap: 8px; margin-bottom: 1.4rem;
+        display: flex; gap: 14px; margin-bottom: 2.2rem;
         justify-content: center; flex-wrap: wrap;
     }
     .feat-pill {
         background: rgba(79,70,229,.08);
         border: 1px solid rgba(79,70,229,.2);
         color: #3b37cc;
-        font-size: 10px; font-weight: 700;
-        padding: 4px 10px; border-radius: 20px;
+        font-size: 13px; font-weight: 700;
+        padding: 9px 20px; border-radius: 24px;
         letter-spacing: .04em; text-transform: uppercase;
+    }
+    /* Constrain inputs + button to standard width, centred */
+    [data-testid="stTextInput"], .stButton {
+        max-width: 400px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
     </style>
 
@@ -179,7 +186,7 @@ def _show_login():
     # Layout: push card to vertical centre
     st.markdown("<div style='height:6vh'></div>", unsafe_allow_html=True)
 
-    _, col, _ = st.columns([0.5, 3, 0.5])
+    _, col, _ = st.columns([0.15, 5, 0.15])
     with col:
         # Card header (pure HTML)
         st.markdown(f"""
@@ -188,7 +195,7 @@ def _show_login():
                 <span class="login-badge">🔒 Secure Portal</span>
             </div>
             <div style="text-align:center">
-                <div style="font-size:44px;margin-bottom:.4rem">🏢</div>
+                <div style="font-size:72px;margin-bottom:.6rem">🏢</div>
                 <div class="login-firm">{FIRM_NAME_L}</div>
                 <div class="login-tagline">{FIRM_TAG_L}</div>
                 <div class="feat-row">
