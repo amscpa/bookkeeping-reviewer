@@ -243,13 +243,36 @@ def build_comparison(cy_data, py_data):
 # ══════════════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """You are a senior Canadian CPA with 20+ years of Alberta small-business experience.
-You are performing a DETAILED Income Statement variance analysis comparing two fiscal years.
-You have the top 20 transactions for each account, including both the bank description and
-the client's own comment explaining the transaction.
-Your job is to read every description and comment carefully and write a thorough,
-narrative explanation of exactly WHY each account changed.
-Do not give generic answers — reference specific payees, dates, amounts, and client comments.
-Be precise, professional, and actionable. All amounts are CAD."""
+You are writing a DETAILED Income Statement variance analysis for a CPA file review.
+
+CRITICAL RULES — you MUST follow these exactly:
+
+1. For EVERY account, you MUST walk through EACH individual transaction listed and
+   explain what it is, what it means, and how it contributed to the variance.
+   DO NOT summarize groups of transactions — name each one specifically.
+
+2. Always mention: the exact dollar amount, the date or month, the payee/description,
+   and the client comment if one is provided.
+
+3. Explain the STORY of each account: what happened month by month, what was a
+   one-time item, what was recurring, what was new this year, what was missing vs last year.
+
+4. Use language like a CPA reviewing a file would use:
+   "The $3,800 payment on July 22 to [payee] per client comment '[comment]' represents..."
+   "Compared to prior year where the largest item was [payee] at $X, this year..."
+   "The spike in [month] is explained by [specific transaction]..."
+   "There was a one-time [description] of $X with no prior year equivalent..."
+
+5. NEVER write generic sentences like "expenses increased due to higher costs" or
+   "revenue was higher due to increased business activity" — these add no value.
+   Every sentence must reference a specific transaction, payee, date, or amount.
+
+6. If a client comment is provided in square brackets, quote it and explain its significance.
+
+7. Compare specific transactions between years — "In {prior_year} the largest item was
+   [X] at $Y, whereas in {current_year} the largest item was [A] at $B..."
+
+All amounts are CAD. Be thorough, specific, and actionable."""
 
 
 def fmt(v):
@@ -260,102 +283,133 @@ def build_prompt(comparison, cy, py):
     lines = [
         "INCOME STATEMENT — DETAILED YEAR-OVER-YEAR ANALYSIS",
         f"Current Year: {cy}    Prior Year: {py}",
-        f"Only Income Statement accounts included. Sorted by largest absolute dollar change.",
-        f"Each account shows top {TOP_N} transactions with description AND client comment.",
+        "IS accounts only. Sorted by largest absolute dollar change.",
+        f"Top {TOP_N} transactions per account — read EVERY one carefully.",
         "",
     ]
 
     for a in comparison:
+        chg_sign = "INCREASE" if a["change_dollar"] > 0 else "DECREASE"
         lines += [
-            "=" * 60,
+            "=" * 65,
             f"ACCOUNT: {a['name']}",
-            f"  Net Movement:  PY {fmt(a['py_net'])}  →  CY {fmt(a['cy_net'])}"
-            f"  |  Change: {fmt(a['change_dollar'])}  ({a['change_pct']:+.1f}%)",
-            f"  Closing Bal:   PY {fmt(a['py_closing'])}  →  CY {fmt(a['cy_closing'])}",
+            f"  {py} Net: {fmt(a['py_net'])}   {cy} Net: {fmt(a['cy_net'])}",
+            f"  CHANGE: {fmt(a['change_dollar'])} ({a['change_pct']:+.1f}%) — {chg_sign}",
+            "",
         ]
 
         if a["cy_txns"]:
-            lines.append(f"  {cy} transactions (top {len(a['cy_txns'])} by size):")
-            lines.append(f"  {'Date':<12} {'Amount':>10}  {'Description':<45} {'Client Comment'}")
-            lines.append(f"  {'-'*12} {'-'*10}  {'-'*45} {'-'*30}")
-            for t in a["cy_txns"]:
-                cmt = f"[{t['comments']}]" if t["comments"] else ""
-                lines.append(
-                    f"  {t['date']:<12} {fmt(t['amount']):>10}  "
-                    f"{t['desc']:<45} {cmt}"
-                )
+            lines.append(f"  ── {cy} TRANSACTIONS (largest {len(a['cy_txns'])}) ──")
+            for idx, t in enumerate(a["cy_txns"], 1):
+                cmt = f'  CLIENT NOTE: "{t["comments"]}"' if t["comments"] else ""
+                lines.append(f"  [{idx:02d}] {t['date']}  {fmt(t['amount']):>10}  {t['desc']}{cmt}")
+            lines.append("")
 
         if a["py_txns"]:
-            lines.append(f"  {py} transactions (top {len(a['py_txns'])} by size):")
-            lines.append(f"  {'Date':<12} {'Amount':>10}  {'Description':<45} {'Client Comment'}")
-            lines.append(f"  {'-'*12} {'-'*10}  {'-'*45} {'-'*30}")
-            for t in a["py_txns"]:
-                cmt = f"[{t['comments']}]" if t["comments"] else ""
-                lines.append(
-                    f"  {t['date']:<12} {fmt(t['amount']):>10}  "
-                    f"{t['desc']:<45} {cmt}"
-                )
-        lines.append("")
+            lines.append(f"  ── {py} TRANSACTIONS (largest {len(a['py_txns'])}) ──")
+            for idx, t in enumerate(a["py_txns"], 1):
+                cmt = f'  CLIENT NOTE: "{t["comments"]}"' if t["comments"] else ""
+                lines.append(f"  [{idx:02d}] {t['date']}  {fmt(t['amount']):>10}  {t['desc']}{cmt}")
+            lines.append("")
+
+        if not a["cy_txns"] and not a["py_txns"]:
+            lines.append(f"  (No transactions found — account may be new or zero-activity)")
+            lines.append("")
 
     data_block = "\n".join(lines)
 
+    # Build a transaction-by-transaction example to show the AI what level of detail we want
+    example_acct = next((a for a in comparison if a["cy_txns"]), None)
+    example_str = ""
+    if example_acct:
+        example_str = f"""
+EXAMPLE OF THE LEVEL OF DETAIL REQUIRED for account "{example_acct['name']}":
+
+"The {example_acct['name']} account {'increased' if example_acct['change_dollar'] > 0 else 'decreased'} by \
+{fmt(abs(example_acct['change_dollar']))} ({abs(example_acct['change_pct']):.1f}%) from {py} to {cy}. \
+""" + (
+    f"The largest {cy} transaction was transaction [01] on {example_acct['cy_txns'][0]['date']} "
+    f"for {fmt(example_acct['cy_txns'][0]['amount'])} described as '{example_acct['cy_txns'][0]['desc']}'"
+    + (f" — the client noted: '{example_acct['cy_txns'][0]['comments']}'" if example_acct['cy_txns'][0]['comments'] else "")
+    + ". " if example_acct["cy_txns"] else ""
+) + (
+    f"In {py} the largest item was {fmt(example_acct['py_txns'][0]['amount'])} on "
+    f"{example_acct['py_txns'][0]['date']} for '{example_acct['py_txns'][0]['desc']}'..."
+    if example_acct["py_txns"] else ""
+) + '"'
+
     return f"""{data_block}
 
-You are writing a formal Income Statement variance analysis report for a CPA file review.
-For EACH account above, produce a detailed written analysis.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSTRUCTIONS — READ CAREFULLY BEFORE WRITING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{example_str}
+
+For Section 2 (Detailed Account Analysis), you MUST:
+- Reference EVERY numbered transaction [01], [02], [03]... listed above
+- For each transaction: state the date, amount, what the description tells you,
+  and what the client comment (if any) means
+- Explain whether each transaction is: recurring (appeared in both years),
+  one-time (only in {cy}), increased/decreased vs prior year, or new vendor/payee
+- Identify the specific month(s) where activity spiked or dropped
+- Compare top transactions between {py} and {cy} by name — do not just say
+  "transactions were higher", say WHICH ones were higher and by how much
+- If a client comment explains a transaction, incorporate it into your explanation
+- Minimum 8-12 sentences per account for accounts with significant variance
+
+PRODUCE EXACTLY THESE SECTIONS:
 
 ## 1. EXECUTIVE SUMMARY
-Write 4-6 sentences covering:
-- Total IS activity change from {py} to {cy}
-- Which 3-4 accounts drove the biggest changes and why
-- Overall assessment of the business performance based on the IS
-- Any immediate red flags a CPA should address
+5-7 sentences. Name the specific accounts and specific transactions that drove the
+overall IS change. Reference actual dollar amounts and payee names from the data above.
+DO NOT write generic statements — every sentence must name something specific.
 
 ## 2. DETAILED ACCOUNT ANALYSIS
-For EVERY account listed above, write a detailed paragraph (minimum 5-8 sentences) that:
-a) States the exact dollar amount and % change clearly
-b) Identifies the SPECIFIC transactions causing the change — name the payees,
-   reference the dates, and quote the client comments where provided
-c) Distinguishes between: recurring items vs one-time items, seasonal patterns,
-   new vendors/clients vs existing ones, and intentional changes vs anomalies
-d) Explains the accounting and business significance of the change
-e) States whether this change is expected/normal, requires client explanation,
-   or raises a CRA audit concern
-f) Notes any transactions that appear unusual, inconsistently described, or
-   that are missing compared to the prior year
+
+For EVERY account, write a narrative analysis in this exact format:
+
+### [Account Name] — {fmt(0) if not comparison else ''} Change: [$ amount] ([%])
+
+Start with the total change sentence, then walk through EVERY transaction listed:
+- Name each transaction by its description and date
+- State its amount and whether it is higher, lower, or absent vs prior year
+- Reference client comments where provided
+- Identify patterns: seasonal, one-time, recurring, new vendor
+- End with a one-sentence CPA assessment: Normal / Needs explanation / CRA risk
 
 ## 3. INCOME STATEMENT VARIANCE TABLE
 Markdown table:
 | Account | {py} | {cy} | $ Change | % Change | Assessment |
-Assessment values: ✅ Normal | ⚠ Needs Explanation | 🔴 CRA Risk | 📈 Growth | 📉 Decline
-Sort by absolute $ change, largest first.
+Assessment: ✅ Normal | ⚠ Needs Explanation | 🔴 CRA Risk | 📈 Revenue Growth | 📉 Revenue Decline
 
-## 4. KEY REVENUE ANALYSIS
-Focused analysis of all revenue/income accounts only:
-- Total revenue change and %
-- Revenue mix changes (if multiple revenue streams)
-- Consistency of revenue descriptions year over year
-- Any revenue recognition concerns
+## 4. REVENUE ACCOUNTS — DETAILED COMMENTARY
+For revenue/income accounts only:
+Walk through each revenue transaction pattern. Are clients the same as last year?
+New revenue sources? Lost revenue sources? Any gaps in months? Any unusual revenue timing?
 
-## 5. KEY EXPENSE ANALYSIS
-Focused analysis of all expense accounts:
-- Which expenses increased proportionally with revenue (expected)
-- Which expenses increased disproportionately (needs explanation)
-- Which expenses dropped significantly (possibly missing receipts)
-- Any personal expenses that may have been coded to business accounts
-  (reference specific description patterns)
+## 5. EXPENSE ACCOUNTS — DETAILED COMMENTARY
+For all expense accounts:
+Which expenses grew proportionally with revenue (acceptable)?
+Which grew disproportionately (needs explanation)?
+Which dropped — are receipts possibly missing?
+Any descriptions that look like personal expenses coded to business?
+Name specific transactions as evidence for each point.
 
 ## 6. RED FLAGS & CRA AUDIT RISKS
-Numbered list. For each item:
-- Account name and specific transaction(s)
-- Why it is a concern
-- Risk level: 🔴 High / 🟡 Medium / 🟢 Low
-- Recommended action before filing
+Numbered list. For each:
+- Account + specific transaction(s) from the data above
+- Exact dollar amount and date
+- Why it is a concern for CRA
+- Risk: 🔴 High / 🟡 Medium / 🟢 Low
+- Recommended action
 
-## 7. CLIENT QUESTIONS
-Numbered list of specific questions to ask the client at the year-end meeting.
-Reference actual transaction descriptions and amounts.
-Minimum 6 questions, maximum 10.
+## 7. CLIENT MEETING QUESTIONS
+8-10 specific questions. Each question must:
+- Name the specific account
+- Reference the actual transaction description and amount
+- Ask for a clear explanation
+Example format: "In [account], we see a payment of $X on [date] to [payee description].
+Can you confirm what this relates to and provide supporting documentation?"
 """.strip()
 
 
@@ -372,7 +426,7 @@ def call_openai(prompt, api_key, model):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user",   "content": prompt},
             ],
-            max_completion_tokens=5000,
+            max_completion_tokens=8000,
         )
     else:
         resp = client.chat.completions.create(
@@ -381,7 +435,7 @@ def call_openai(prompt, api_key, model):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user",   "content": prompt},
             ],
-            max_tokens=5000,
+            max_tokens=8000,
             temperature=0.2,
         )
     return resp.choices[0].message.content
